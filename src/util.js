@@ -1,19 +1,15 @@
 import smoothscroll from "smoothscroll-polyfill";
+import scrollIntoView from "scroll-into-view-if-needed";
+import smoothScrollIntoView from "smooth-scroll-into-view-if-needed";
 /**
  * @description: 平滑的滚动到滚动区域的顶部
  * @method moveToTop
  * @param { HTMLElement } el 滚动区域元素
  * @param { HTMLElement } firstChild 滚动区域的第一个子元素
  */
- export function moveToTop(el, firstChild) {
+export function moveToTop(el, firstChild) {
   if (el.scrollTop === 0) return;
-  if (
-    typeof window.getComputedStyle(document.body).scrollBehavior === "undefined"
-  ) {
-    easeout(el.scrollTop, 0, 5, function (val) {
-      el.scrollTop = val;
-    });
-  } else {
+  if ("scrollBehavior" in document.documentElement.style) {
     /** 法1：子元素 + 插件 + scrollIntoView参数 */
     smoothscroll.polyfill();
     firstChild.scrollIntoView({
@@ -27,6 +23,10 @@ import smoothscroll from "smoothscroll-polyfill";
 
     /** 法3：scrollTop + 样式scroll-behavior: smooth;*/
     // el.scrollTop = 0;
+  } else {
+    easeout(el.scrollTop, 0, 5, function (val) {
+      el.scrollTop = val;
+    });
   }
 }
 /**
@@ -36,7 +36,7 @@ import smoothscroll from "smoothscroll-polyfill";
  * @param {Number} rate 缓动率
  * @param {Function} callback 缓动结束回调函数 两个参数分别是当前位置和是否结束
  */
- export var easeout = function (position, destination, rate, callback) {
+export var easeout = function (position, destination, rate, callback) {
   if (position === destination || typeof destination !== "number") {
     return false;
   }
@@ -63,11 +63,11 @@ import smoothscroll from "smoothscroll-polyfill";
 };
 
 /**
- * @description: 回到顶部的缓冲函数 
- * @method stepScroll 
+ * @description: 回到顶部的缓冲函数
+ * @method stepScroll
  * @param { HTMLElement } el 滚动区域元素
  */
- export const stepScroll = (el) => {
+export const stepScroll = (el) => {
   const timer = setInterval(() => {
     const moveHeight = Math.floor(
       el.scrollTop < 100 ? 0 : (el.scrollTop / 5) * 4
@@ -77,3 +77,16 @@ import smoothscroll from "smoothscroll-polyfill";
   }, 17);
 };
 
+/**
+ * @description: 使用ant中有用到的scroll-into-view-if-needed依赖包
+ * @method scrollIntoViewIfNeeded
+ * @param { HTMLElement } firstChild 滚动区域的第一个子元素
+ */
+export const scrollIntoViewIfNeeded = (firstChild) => {
+  const scrollIntoViewSmoothly =
+    "scrollBehavior" in document.documentElement.style
+      ? scrollIntoView
+      : smoothScrollIntoView;
+
+  scrollIntoViewSmoothly(firstChild, { behavior: "smooth" });
+};
